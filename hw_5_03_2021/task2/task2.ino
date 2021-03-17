@@ -12,9 +12,9 @@ double yaw;
 long prev_time;
 long prev_error;
 float setpoint = 0;
-const float k_p = 0;
-const float k_i = 0;
-const float k_d = 300;
+const float k_p = 0.9;
+const float k_i = 0.3;
+const float k_d = 0;
 float sum = 0;
 
 MPU6050 mpu;
