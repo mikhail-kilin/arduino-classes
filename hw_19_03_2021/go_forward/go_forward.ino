@@ -4,7 +4,7 @@ int rpm_1, rpm_2, pwm_1; // количество оборотов в минут�
 volatile unsigned int pulses_1; // количество импульсов
 volatile unsigned int pulses_2;
 unsigned long timeold;// количество импульсов на оборот
-double speed = 200;
+double speed_value = 144;
 #define HOLES_DISC 20
 
 //моторы 
@@ -15,20 +15,20 @@ double speed = 200;
 #define motorB1 8 //IN3 
 #define motorB2 9 //IN4
 
-const float k_p = 0.4;
-const float k_i = 0;
+const float k_p = 0.1;
+const float k_i = 0.02;
 const float k_d = 0;
 
 float err, u;
 float rpm_setpoint = 200;
-float pwm_min = 100;
+float pwm_min = 70;
 float pwm_max = 255;
 
 int sum1 = 0;
 int sum2 = 0;
 
-int speed1 = speed;
-int speed2 = speed;
+int speed1 = 100;
+int speed2 = 100;
 
 int prev_error1;
 int prev_error2;
@@ -55,14 +55,28 @@ void readEncoder(){
 
       speed1 = speed1 + PID1(rpm_1);
       speed2 = speed2 + PID2(rpm_2);
+      if (speed1 < pwm_min) {
+        speed1 = pwm_min;
+      }
 
+      if (speed2 < pwm_min) {
+        speed2 = pwm_min;
+      }
+
+      if (speed1 > pwm_max) {
+        speed1 = pwm_max;
+      }
+
+      if (speed2 > pwm_max) {
+        speed2 = pwm_max;
+      }
       analogWrite(enA, speed1); //скорость мотора A
       analogWrite(enB, speed2); //скорость мотора A
 
-//      Serial.print(speed1);
-//      Serial.print(" ");
-//      Serial.print(speed2);
-//      Serial.println(" "); 
+      Serial.print(speed1);
+      Serial.print(" ");
+      Serial.print(speed2);
+      Serial.print(" "); 
  
       Serial.print(rpm_1);
       Serial.print(" ");
@@ -96,8 +110,8 @@ void setup()
    pinMode(motorA2, OUTPUT);
    pinMode(motorB1, OUTPUT);
    pinMode(motorB2, OUTPUT);
-   analogWrite(enA, speed); //скорость мотора A
-   analogWrite(enB, speed); //скорость мотора B 
+   analogWrite(enA, 100); //скорость мотора A
+   analogWrite(enB, 100); //скорость мотора B 
 
   digitalWrite(motorA1, LOW);
   digitalWrite(motorA2, HIGH);
@@ -109,8 +123,8 @@ void setup()
 
 int PID1(int input) {
   long curr_time = millis();
-  long dt = curr_time - prev_time1;
-  int err = speed - input;
+  long dt = (curr_time - prev_time1)/1000;
+  int err = speed_value - input;
   sum1 += err * dt;
   int u = k_p * err + k_i *sum1 + k_d * (err - prev_error1)/dt;
 
@@ -122,8 +136,8 @@ int PID1(int input) {
 
 int PID2(int input) {
   long curr_time = millis();
-  long dt = curr_time - prev_time2;
-  int err = speed - input;
+  long dt = (curr_time - prev_time2)/1000;
+  int err = speed_value - input;
   sum2 += err * dt;
   int u = k_p * err + k_i *sum2 + k_d * (err - prev_error2)/dt;
 
