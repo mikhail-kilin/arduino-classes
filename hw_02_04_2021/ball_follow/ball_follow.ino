@@ -14,19 +14,24 @@ unsigned long timeold;// количество импульсов на оборо
 #define motorB1 8 //IN3 
 #define motorB2 9 //IN4
 
-const float k_p = 0.5;
-const float k_i = 0.07;
-const float k_d = 0.04;
+const float k_p = 0.1;
+const float k_i = 0.08;
+const float k_d = 0.019;
+
+int last_error;
 
 float err, u;
 
 int sum1 = 0;
 int sum2 = 0;
 
-int speed1 = 100;
+int speed1 = 70;
+int speed2 = 70;
 
 int prev_error1;
 long prev_time1;
+
+int fix;
 
 void setup()
 {
@@ -36,13 +41,15 @@ void setup()
 
    prev_time1 = millis();
    prev_error1 = 0;
+   last_error = 0;
+   fix = 0;
 
    pinMode(motorA1, OUTPUT);
    pinMode(motorA2, OUTPUT);
    pinMode(motorB1, OUTPUT);
    pinMode(motorB2, OUTPUT);
-   analogWrite(enA, 100); //скорость мотора A
-   analogWrite(enB, 100); //скорость мотора B 
+   analogWrite(enA, 0); //скорость мотора A
+   analogWrite(enB, 0); //скорость мотора B 
 
   digitalWrite(motorA1, LOW);
   digitalWrite(motorA2, HIGH);
@@ -54,10 +61,13 @@ void setup()
 
 int PID(int err) {
   long curr_time = millis();
-  long dt = (curr_time - prev_time1)/1000;
+  long dt = 1;
 
   sum1 += err * dt;
-  int u = k_p * err + k_i *sum1 + k_d * (err - prev_error1)/dt;
+  if (sum1 > 1000) {
+    sum1 = 0;
+    }
+  int u = k_p * err + k_i * sum1 + k_d * (err - prev_error1)/dt;
 
   prev_error1 = err;
   prev_time1 = curr_time;
@@ -65,11 +75,16 @@ int PID(int err) {
   return u;
 }
 
+void go(int input) {
+  analogWrite(enA, 73 + input); //скорость мотора A
+  analogWrite(enB, 73 - input); //скорость мотора B
+}
+
 void loop()
 {
   if(Serial.available() > 0) {
-    speed1 = speed1 + PID(Serial.parseInt());
-
-    analogWrite(enA, speed1); //скорость мотора A
+    last_error = Serial.parseInt();
   }
+  int k = PID(last_error);
+  go(k);
 }

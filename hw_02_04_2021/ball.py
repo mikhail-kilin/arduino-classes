@@ -28,7 +28,9 @@ while cap.isOpened():
               cx = int(M['m10']/M['m00'])
               cx = int(M['m01']/M['m00'])
               err = 160 - cx
-              ser.write(str(err).encode('utf-8'))
+              ser.write((str(err)+"\n").encode('utf-8'))
+              ser.flush()
+              time.sleep(0.01)
   
   cv2.imshow('frame', frame)
   k = cv2.waitKey(1)
